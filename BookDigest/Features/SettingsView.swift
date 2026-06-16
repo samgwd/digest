@@ -11,7 +11,7 @@ struct SettingsView: View {
                         .font(EditorialTheme.displayFont(size: 31))
                         .foregroundStyle(EditorialTheme.ink)
 
-                    Text("Configure your OpenAI connection and voice preferences.")
+                    Text("Configure your OpenAI and ElevenLabs connections and voice preferences.")
                         .font(EditorialTheme.detailFont(size: 16))
                         .foregroundStyle(EditorialTheme.mutedInk)
                 }
@@ -22,8 +22,8 @@ struct SettingsView: View {
                     settingsField(label: "Model", text: $settings.model)
                 }
 
-                settingsSection(title: "Speech") {
-                    settingsField(label: "Speech Model", text: $settings.speechModel)
+                settingsSection(title: "ElevenLabs") {
+                    settingsField(label: "API Key", isSecure: true, text: $settings.elevenLabsAPIKey)
                     EditorialDivider()
                     voicePicker
                 }
@@ -100,21 +100,21 @@ struct SettingsView: View {
                 columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())],
                 spacing: 8
             ) {
-                ForEach(Self.voices, id: \.self) { voice in
+                ForEach(Self.voices, id: \.id) { voice in
                     Button {
-                        settings.speechVoice = voice
+                        settings.speechVoice = voice.id
                     } label: {
-                        Text(voice.capitalized)
+                        Text(voice.name)
                             .font(EditorialTheme.uiFont(size: 14, weight: .medium))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 8)
                             .background(
                                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                    .fill(settings.speechVoice == voice
+                                    .fill(settings.speechVoice == voice.id
                                           ? EditorialTheme.forest
                                           : Color.white.opacity(0.5))
                             )
-                            .foregroundStyle(settings.speechVoice == voice
+                            .foregroundStyle(settings.speechVoice == voice.id
                                              ? EditorialTheme.paperHighlight
                                              : EditorialTheme.ink)
                     }
@@ -124,19 +124,13 @@ struct SettingsView: View {
         }
     }
 
-    private static let voices = [
-        "marin",
-        "cedar",
-        "alloy",
-        "ash",
-        "ballad",
-        "coral",
-        "echo",
-        "fable",
-        "nova",
-        "onyx",
-        "sage",
-        "shimmer",
-        "verse"
+    private struct ElevenLabsVoice {
+        let name: String
+        let id: String
+    }
+
+    private static let voices: [ElevenLabsVoice] = [
+        .init(name: "James", id: "lUTamkMw7gOzZbFIwmq4"),
+        .init(name: "Jodi", id: "FF59babHL8N8gfTgtBMT")
     ]
 }

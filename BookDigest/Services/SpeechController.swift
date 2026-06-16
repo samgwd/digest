@@ -50,12 +50,12 @@ final class SpeechController: NSObject, ObservableObject {
         }
 
         guard !trimmedAPIKey.isEmpty else {
-            errorMessage = "Add an OpenAI API key in Settings."
+            errorMessage = "Add an ElevenLabs API key in Settings."
             return
         }
 
-        let speechModel = model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "gpt-4o-mini-tts" : model
-        let speechVoice = voice.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "marin" : voice
+        let speechModel = model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "eleven_flash_v2_5" : model
+        let speechVoice = voice.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "lUTamkMw7gOzZbFIwmq4" : voice
         let audioKey = SpeechAudioCache.cacheKey(text: trimmedText, model: speechModel, voice: speechVoice)
 
         currentBookID = bookID
@@ -707,29 +707,24 @@ final class SpeechController: NSObject, ObservableObject {
     }
 
     private static func createSpeech(text: String, apiKey: String, model: String, voice: String) async throws -> Data {
-        guard let url = URL(string: "https://api.openai.com/v1/audio/speech") else {
+        let encodedVoice = voice.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? voice
+        guard let url = URL(string: "https://api.elevenlabs.io/v1/text-to-speech/\(encodedVoice)?output_format=mp3_44100_128") else {
             throw SpeechControllerError.invalidURL
         }
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.timeoutInterval = 180
-        request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.addValue(apiKey, forHTTPHeaderField: "xi-api-key")
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue("audio/mpeg", forHTTPHeaderField: "Accept")
 
-        let payload = SpeechRequest(
-            model: model,
-            input: text,
-            voice: voice,
-            instructions: "Narrate clearly at a calm, podcast-like pace. Keep section headings distinct.",
-            responseFormat: "mp3"
-        )
-        request.httpBody = try JSONEncoder.openAI.encode(payload)
+        let payload = SpeechRequest(text: text, modelId: model)
+        request.httpBody = try JSONEncoder.elevenLabs.encode(payload)
 
         let (data, response): (Data, URLResponse)
         do {
-            (data, response) = try await URLSession.openAI.data(for: request)
+            (data, response) = try await URLSession.elevenLabs.data(for: request)
         } catch let error as URLError where error.code == .timedOut {
             throw SpeechControllerError.timedOut
         }
@@ -739,10 +734,9 @@ final class SpeechController: NSObject, ObservableObject {
         }
 
         guard (200..<300).contains(httpResponse.statusCode) else {
-            let message = try? JSONDecoder().decode(OpenAIErrorResponse.self, from: data)
-            throw SpeechControllerError.requestFailed(
-                message?.error.message ?? "OpenAI speech returned status \(httpResponse.statusCode)."
-            )
+            let message = ElevenLabsErrorParser.message(from: data)
+                ?? "ElevenLabs speech returned status \(httpResponse.statusCode)."
+            throw SpeechControllerError.requestFailed(message)
         }
 
         guard !data.isEmpty else {
@@ -751,7 +745,7 @@ final class SpeechController: NSObject, ObservableObject {
 
         guard Self.looksLikeAudio(data) else {
             let body = String(data: data.prefix(500), encoding: .utf8) ?? "unknown"
-            throw SpeechControllerError.requestFailed("OpenAI returned non-audio data: \(body)")
+            throw SpeechControllerError.requestFailed("ElevenLabs returned non-audio data: \(body)")
         }
 
         return data
@@ -902,27 +896,40 @@ extension SpeechController: AVAudioPlayerDelegate {
 }
 
 private struct SpeechRequest: Encodable {
-    let model: String
-    let input: String
-    let voice: String
-    let instructions: String
-    let responseFormat: String
+    let text: String
+    let modelId: String
 
     enum CodingKeys: String, CodingKey {
-        case model
-        case input
-        case voice
-        case instructions
-        case responseFormat = "response_format"
+        case text
+        case modelId = "model_id"
     }
 }
 
-private struct OpenAIErrorResponse: Decodable {
-    let error: OpenAIError
-}
+private enum ElevenLabsErrorParser {
+    static func message(from data: Data) -> String? {
+        guard let json = try? JSONSerialization.jsonObject(with: data) else {
+            return nil
+        }
 
-private struct OpenAIError: Decodable {
-    let message: String
+        if let dict = json as? [String: Any] {
+            if let detail = dict["detail"] as? String {
+                return detail
+            }
+            if let detail = dict["detail"] as? [String: Any] {
+                if let message = detail["message"] as? String {
+                    return message
+                }
+                if let status = detail["status"] as? String {
+                    return status
+                }
+            }
+            if let message = dict["message"] as? String {
+                return message
+            }
+        }
+
+        return nil
+    }
 }
 
 private enum SpeechControllerError: LocalizedError {
@@ -938,15 +945,15 @@ private enum SpeechControllerError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidURL:
-            return "The OpenAI speech endpoint is not valid."
+            return "The ElevenLabs speech endpoint is not valid."
         case .invalidResponse:
-            return "The response from OpenAI speech was not valid."
+            return "The response from ElevenLabs was not valid."
         case .requestFailed(let message):
             return message
         case .emptyAudio:
-            return "OpenAI returned empty audio."
+            return "ElevenLabs returned empty audio."
         case .timedOut:
-            return "OpenAI speech took too long to prepare audio."
+            return "ElevenLabs took too long to prepare audio."
         case .invalidCacheLocation:
             return "The app could not prepare local audio storage."
         case .missingAudioTrack:
@@ -958,7 +965,7 @@ private enum SpeechControllerError: LocalizedError {
 }
 
 private extension URLSession {
-    static var openAI: URLSession {
+    static var elevenLabs: URLSession {
         let configuration = URLSessionConfiguration.default
         configuration.timeoutIntervalForRequest = 180
         configuration.timeoutIntervalForResource = 300
@@ -968,7 +975,7 @@ private extension URLSession {
 }
 
 private extension JSONEncoder {
-    static var openAI: JSONEncoder {
+    static var elevenLabs: JSONEncoder {
         JSONEncoder()
     }
 }

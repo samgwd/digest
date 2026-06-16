@@ -13,9 +13,9 @@ final class AppSettings: ObservableObject {
         }
     }
 
-    @Published var speechModel: String {
+    @Published var elevenLabsAPIKey: String {
         didSet {
-            UserDefaults.standard.set(speechModel, forKey: speechModelStorageKey)
+            UserDefaults.standard.set(elevenLabsAPIKey, forKey: elevenLabsAPIKeyStorageKey)
         }
     }
 
@@ -25,15 +25,17 @@ final class AppSettings: ObservableObject {
         }
     }
 
+    let speechModel = "eleven_flash_v2_5"
+
     private let apiKeyStorageKey = "openai.apiKey"
     private let modelStorageKey = "openai.model"
-    private let speechModelStorageKey = "openai.speechModel"
-    private let speechVoiceStorageKey = "openai.speechVoice"
+    private let elevenLabsAPIKeyStorageKey = "elevenLabs.apiKey"
+    private let speechVoiceStorageKey = "elevenLabs.speechVoice"
 
     init() {
         apiKey = UserDefaults.standard.string(forKey: apiKeyStorageKey) ?? ""
         model = UserDefaults.standard.string(forKey: modelStorageKey) ?? "gpt-5.4"
-        speechModel = UserDefaults.standard.string(forKey: speechModelStorageKey) ?? "gpt-4o-mini-tts"
-        speechVoice = UserDefaults.standard.string(forKey: speechVoiceStorageKey) ?? "marin"
+        elevenLabsAPIKey = UserDefaults.standard.string(forKey: elevenLabsAPIKeyStorageKey) ?? ""
+        speechVoice = UserDefaults.standard.string(forKey: speechVoiceStorageKey) ?? "lUTamkMw7gOzZbFIwmq4"
     }
 }

@@ -93,7 +93,7 @@ final class CarPlayManager {
                 digest.text,
                 bookID: book.id,
                 title: book.title,
-                apiKey: settings.apiKey,
+                apiKey: settings.elevenLabsAPIKey,
                 model: settings.speechModel,
                 voice: settings.speechVoice
             )

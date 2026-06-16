@@ -298,7 +298,7 @@ struct BookPlaybackView: View {
                 digestText,
                 bookID: book.id,
                 title: book.title,
-                apiKey: settings.apiKey,
+                apiKey: settings.elevenLabsAPIKey,
                 model: settings.speechModel,
                 voice: settings.speechVoice
             )
@@ -314,7 +314,7 @@ struct BookPlaybackView: View {
                 digestText,
                 bookID: book.id,
                 title: book.title,
-                apiKey: settings.apiKey,
+                apiKey: settings.elevenLabsAPIKey,
                 model: settings.speechModel,
                 voice: settings.speechVoice
             )
