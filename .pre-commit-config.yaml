@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: xcodebuild-generic-simulator
+        name: xcodebuild generic iOS simulator
+        entry: xcodebuild -project BookDigest.xcodeproj -scheme BookDigest -configuration Debug -destination "generic/platform=iOS Simulator" -derivedDataPath .build/DerivedData CODE_SIGNING_ALLOWED=NO build
+        language: system
+        pass_filenames: false
