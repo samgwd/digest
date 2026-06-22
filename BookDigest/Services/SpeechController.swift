@@ -195,6 +195,7 @@ final class SpeechController: NSObject, ObservableObject {
         let time = currentPlaybackTime()
         if time >= duration - 1 {
             PlaybackPositionStore.clear(for: bookID)
+            FinishedBooksStore.markFinished(bookID)
         } else {
             PlaybackPositionStore.save(time: time, duration: duration, for: bookID)
         }
@@ -857,6 +858,7 @@ extension SpeechController: AVAudioPlayerDelegate {
             if isUsingCombinedPlayer {
                 if let bookID = currentBookID {
                     PlaybackPositionStore.clear(for: bookID)
+                    FinishedBooksStore.markFinished(bookID)
                 }
                 resetPlaybackState()
                 return
@@ -882,6 +884,9 @@ extension SpeechController: AVAudioPlayerDelegate {
                 isPaused = false
                 deactivateAudioSession()
             } else {
+                if let bookID = currentBookID {
+                    FinishedBooksStore.markFinished(bookID)
+                }
                 resetPlaybackState()
             }
         }
@@ -898,10 +903,16 @@ extension SpeechController: AVAudioPlayerDelegate {
 private struct SpeechRequest: Encodable {
     let text: String
     let modelId: String
+    let voiceSettings = VoiceSettings(stability: 0.7)
 
     enum CodingKeys: String, CodingKey {
         case text
         case modelId = "model_id"
+        case voiceSettings = "voice_settings"
+    }
+
+    struct VoiceSettings: Encodable {
+        let stability: Double
     }
 }
 

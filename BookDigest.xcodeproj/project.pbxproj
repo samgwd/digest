@@ -30,6 +30,8 @@
 		8A1F0B502C0E100100000001 /* AddBookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B4F2C0E100100000001 /* AddBookView.swift */; };
 		8A1F0B522C0E100100000001 /* BookStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B512C0E100100000001 /* BookStore.swift */; };
 		8A1F0B542C0E100100000001 /* GoogleBooksClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B532C0E100100000001 /* GoogleBooksClient.swift */; };
+		8A1F0B712C0E100100000001 /* MyLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B702C0E100100000001 /* MyLibraryView.swift */; };
+		8A1F0B812C0E100100000001 /* DigestGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B802C0E100100000001 /* DigestGenerator.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -58,6 +60,8 @@
 		8A1F0B622C0E100100000001 /* CarPlaySceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlaySceneDelegate.swift; sourceTree = "<group>"; };
 		8A1F0B632C0E100100000001 /* CarPlayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlayManager.swift; sourceTree = "<group>"; };
 		8A1F0B642C0E100100000001 /* BookDigest.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BookDigest.entitlements; sourceTree = "<group>"; };
+		8A1F0B702C0E100100000001 /* MyLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyLibraryView.swift; sourceTree = "<group>"; };
+		8A1F0B802C0E100100000001 /* DigestGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigestGenerator.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -116,6 +120,7 @@
 			isa = PBXGroup;
 			children = (
 				8A1F0B022C0E100100000001 /* LibraryView.swift */,
+				8A1F0B702C0E100100000001 /* MyLibraryView.swift */,
 				8A1F0B032C0E100100000001 /* BookDetailView.swift */,
 				8A1F0B332C0E100100000001 /* BookPlaybackView.swift */,
 				8A1F0B352C0E100100000001 /* CategoryShelfView.swift */,
@@ -153,6 +158,7 @@
 				8A1F0B512C0E100100000001 /* BookStore.swift */,
 				8A1F0B532C0E100100000001 /* GoogleBooksClient.swift */,
 				8A1F0B602C0E100100000001 /* DigestStorage.swift */,
+				8A1F0B802C0E100100000001 /* DigestGenerator.swift */,
 				8A1F0B612C0E100100000001 /* SharedAppState.swift */,
 			);
 			path = Services;
@@ -230,6 +236,7 @@
 				8A1F0B102C0E100100000001 /* BookDigestApp.swift in Sources */,
 				8A1F0B112C0E100100000001 /* AppView.swift in Sources */,
 				8A1F0B122C0E100100000001 /* LibraryView.swift in Sources */,
+				8A1F0B712C0E100100000001 /* MyLibraryView.swift in Sources */,
 				8A1F0B132C0E100100000001 /* BookDetailView.swift in Sources */,
 				8A1F0B342C0E100100000001 /* BookPlaybackView.swift in Sources */,
 				8A1F0B362C0E100100000001 /* CategoryShelfView.swift in Sources */,
@@ -246,6 +253,7 @@
 				8A1F0B522C0E100100000001 /* BookStore.swift in Sources */,
 				8A1F0B542C0E100100000001 /* GoogleBooksClient.swift in Sources */,
 				8A1F0B652C0E100100000001 /* DigestStorage.swift in Sources */,
+				8A1F0B812C0E100100000001 /* DigestGenerator.swift in Sources */,
 				8A1F0B662C0E100100000001 /* SharedAppState.swift in Sources */,
 				8A1F0B672C0E100100000001 /* CarPlaySceneDelegate.swift in Sources */,
 				8A1F0B682C0E100100000001 /* CarPlayManager.swift in Sources */,

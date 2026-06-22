@@ -16,6 +16,16 @@ struct AppView: View {
             }
 
             NavigationStack {
+                MyLibraryView()
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbarBackground(.hidden, for: .navigationBar)
+            }
+            .tag(AppTab.library)
+            .tabItem {
+                Label("Library", systemImage: "books.vertical.fill")
+            }
+
+            NavigationStack {
                 CategoriesView()
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbarBackground(.hidden, for: .navigationBar)
@@ -48,5 +58,5 @@ struct AppView: View {
 }
 
 enum AppTab: Hashable {
-    case home, categories, search, settings
+    case home, library, categories, search, settings
 }

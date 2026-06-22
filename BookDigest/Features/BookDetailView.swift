@@ -1,6 +1,6 @@
 import SwiftUI
 
-private enum DigestState {
+private enum DigestState: Equatable {
     case idle
     case loading
     case loaded
@@ -14,6 +14,7 @@ struct BookDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var speechController: SpeechController
+    @EnvironmentObject private var digestGenerator: DigestGenerator
     @State private var digestText = ""
     @State private var digestState: DigestState = .idle
     @State private var errorMessage: String?
@@ -58,9 +59,13 @@ struct BookDetailView: View {
             loadSavedDigest()
             loadSavedPlaybackPosition()
             contentsItems = ContentsStorage.load(for: book.id) ?? []
+            syncWithGenerator(status: digestGenerator.status(for: book.id))
             async let synopsisTask: () = loadSynopsis()
             async let contentsTask: () = loadContents()
             _ = await (synopsisTask, contentsTask)
+        }
+        .onReceive(digestGenerator.$statuses) { statuses in
+            syncWithGenerator(status: statuses[book.id] ?? .idle)
         }
         .fullScreenCover(isPresented: $isShowingPlayer, onDismiss: {
             loadSavedPlaybackPosition()
@@ -165,9 +170,8 @@ struct BookDetailView: View {
 
             if shouldShowRefreshButton {
                 Button {
-                    Task {
-                        await generateDigest()
-                    }
+                    speechController.stop()
+                    digestGenerator.generate(for: book)
                 } label: {
                     Text("Refresh Digest")
                 }
@@ -468,31 +472,41 @@ struct BookDetailView: View {
 
     private func handlePrimaryAction() {
         if digestText.isEmpty {
-            Task {
-                await generateDigest()
-            }
+            speechController.stop()
+            digestGenerator.generate(for: book)
             return
         }
 
         openPlayer()
     }
 
-    private func generateDigest() async {
-        digestState = .loading
-        errorMessage = nil
-        speechController.stop()
-        startDigestProgressTimer()
-
-        do {
-            let client = OpenAIClient(apiKey: settings.apiKey, model: settings.model)
-            digestText = DigestTextSanitizer.sanitize(try await client.generateDigest(for: book))
-            savedAt = Date()
-            DigestStorage.save(digestText, for: book.id, savedAt: savedAt ?? Date())
+    private func syncWithGenerator(status: DigestGenerator.Status) {
+        switch status {
+        case .idle:
+            break
+        case .generating:
+            if digestState != .loading {
+                errorMessage = nil
+                digestState = .loading
+                startDigestProgressTimer()
+            }
+        case .completed(let when):
+            if let saved = DigestStorage.load(for: book.id) {
+                let sanitized = DigestTextSanitizer.sanitize(saved.text)
+                digestText = sanitized
+                savedAt = saved.savedAt
+                if sanitized != saved.text {
+                    DigestStorage.save(sanitized, for: book.id, savedAt: saved.savedAt)
+                }
+            } else {
+                savedAt = when
+            }
             stopDigestProgressTimer()
             digestState = .loaded
-        } catch {
+            digestGenerator.acknowledgeCompletion(for: book.id)
+        case .failed(let message):
+            errorMessage = message
             stopDigestProgressTimer()
-            errorMessage = error.localizedDescription
             digestState = .failed
         }
     }
@@ -500,6 +514,7 @@ struct BookDetailView: View {
     private static let estimatedDigestSeconds: Double = 40
 
     private func startDigestProgressTimer() {
+        digestProgressTimer?.invalidate()
         digestProgress = 0
         let start = Date()
         let timer = Timer(timeInterval: 0.25, repeats: true) { _ in
