@@ -192,6 +192,10 @@ final class BookCoverService {
     }
 
     private func resolveRemoteURL(for book: Book) async -> URL? {
+        if let coverURL = book.coverURL {
+            return coverURL
+        }
+
         if let googleURL = await googleBooksURL(for: book) {
             return googleURL
         }

@@ -1,8 +1,6 @@
 import SwiftUI
 
 struct CategoriesView: View {
-    @EnvironmentObject private var bookStore: BookStore
-
     var body: some View {
         ScrollView(showsIndicators: false) {
             LazyVStack(alignment: .leading, spacing: 14) {
@@ -12,7 +10,7 @@ struct CategoriesView: View {
                     NavigationLink {
                         CategoryShelfView(category: category)
                     } label: {
-                        CategoryRow(category: category, count: books(in: category).count)
+                        CategoryRow(category: category)
                     }
                     .buttonStyle(.plain)
                 }
@@ -36,7 +34,4 @@ struct CategoriesView: View {
         )
     }
 
-    private func books(in category: BookCategory) -> [Book] {
-        bookStore.allBooks.filter { $0.category == category }
-    }
 }

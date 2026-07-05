@@ -83,6 +83,16 @@ enum BookCategory: String, CaseIterable, Identifiable {
     }
 }
 
+extension Book {
+    static func slug(fromTitle title: String) -> String {
+        title.lowercased()
+            .replacingOccurrences(of: "[^a-z0-9 ]", with: "", options: .regularExpression)
+            .split(separator: " ")
+            .prefix(6)
+            .joined(separator: "-")
+    }
+}
+
 struct Book: Identifiable {
     let id: String
     let title: String
@@ -92,6 +102,9 @@ struct Book: Identifiable {
     let category: BookCategory
     let keywords: [String]
     let coverColors: [Color]
+    // Known cover image URL (e.g. from an Open Library search hit). When set,
+    // the cover service uses it directly instead of searching by title/author.
+    var coverURL: URL?
 
     func matches(searchText: String) -> Bool {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -488,10 +501,6 @@ struct Book: Identifiable {
 extension Book {
     var coverImageName: String {
         "cover-\(id)"
-    }
-
-    var readingMinutes: Int {
-        30
     }
 
     var keyIdeaCount: Int {

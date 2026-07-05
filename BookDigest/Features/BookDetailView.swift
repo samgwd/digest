@@ -15,6 +15,7 @@ struct BookDetailView: View {
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var speechController: SpeechController
     @EnvironmentObject private var digestGenerator: DigestGenerator
+    @EnvironmentObject private var bookStore: BookStore
     @State private var digestText = ""
     @State private var digestState: DigestState = .idle
     @State private var errorMessage: String?
@@ -23,7 +24,6 @@ struct BookDetailView: View {
     @State private var isDigestExpanded = false
     @State private var synopsis: String?
     @State private var isSynopsisLoading = false
-    @State private var contentsItems: [String] = []
     @State private var digestProgress: Double = 0
     @State private var digestProgressTimer: Timer?
     @State private var savedPlaybackTime: TimeInterval = 0
@@ -38,7 +38,6 @@ struct BookDetailView: View {
                     if let synopsis, !synopsis.isEmpty {
                         leadParagraph
                     }
-                    contentsBlock
                     digestBlock
                 }
                 .padding(.horizontal, 22)
@@ -58,7 +57,6 @@ struct BookDetailView: View {
         .task(id: book.id) {
             loadSavedDigest()
             loadSavedPlaybackPosition()
-            contentsItems = ContentsStorage.load(for: book.id) ?? []
             syncWithGenerator(status: digestGenerator.status(for: book.id))
             async let synopsisTask: () = loadSynopsis()
             async let contentsTask: () = loadContents()
@@ -164,6 +162,18 @@ struct BookDetailView: View {
             .buttonStyle(EditorialPrimaryButtonStyle())
             .disabled(primaryButtonDisabled)
 
+            if !isInLibrary {
+                Button {
+                    bookStore.addBook(book)
+                } label: {
+                    HStack {
+                        Image(systemName: "plus")
+                        Text("Add to Library")
+                    }
+                }
+                .buttonStyle(EditorialSecondaryButtonStyle())
+            }
+
             if hasListeningProgress {
                 listeningProgressCard
             }
@@ -199,38 +209,6 @@ struct BookDetailView: View {
                 Text(speechErrorMessage)
                     .font(EditorialTheme.detailFont(size: 14))
                     .foregroundStyle(.red.opacity(0.86))
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var contentsBlock: some View {
-        if !contentsItems.isEmpty {
-            VStack(alignment: .leading, spacing: 16) {
-                EditorialEyebrow(text: "Contents")
-
-                VStack(spacing: 0) {
-                    ForEach(Array(contentsItems.enumerated()), id: \.offset) { index, item in
-                        VStack(spacing: 0) {
-                            HStack(alignment: .firstTextBaseline) {
-                                Text(String(format: "%02d", index + 1))
-                                    .font(EditorialTheme.uiFont(size: 17, weight: .semibold))
-                                    .foregroundStyle(EditorialTheme.accent)
-
-                                Text(cleanSectionTitle(item))
-                                    .font(EditorialTheme.titleFont(size: 20))
-                                    .foregroundStyle(EditorialTheme.ink)
-
-                                Spacer()
-                            }
-                            .padding(.vertical, 14)
-
-                            if index < contentsItems.count - 1 {
-                                EditorialDivider()
-                            }
-                        }
-                    }
-                }
             }
         }
     }
@@ -466,13 +444,16 @@ struct BookDetailView: View {
         return "Ready"
     }
 
-    private func cleanSectionTitle(_ item: String) -> String {
-        item.replacingOccurrences(of: #"^\d+\.\s*"#, with: "", options: .regularExpression)
+    private var isInLibrary: Bool {
+        bookStore.allBooks.contains { $0.id == book.id }
     }
 
     private func handlePrimaryAction() {
         if digestText.isEmpty {
             speechController.stop()
+            // Keep the digest reachable from the library when generating for a
+            // book browsed from a category shelf.
+            bookStore.addBook(book)
             digestGenerator.generate(for: book)
             return
         }
@@ -580,6 +561,8 @@ struct BookDetailView: View {
         SynopsisStorage.save(fetched, for: book.id)
     }
 
+    // Contents are no longer shown on this page, but playback still uses them
+    // for section markers, so keep fetching in the background.
     private func loadContents() async {
         if ContentsStorage.load(for: book.id) != nil { return }
 
@@ -589,7 +572,6 @@ struct BookDetailView: View {
         ) else { return }
 
         ContentsStorage.save(fetched, for: book.id)
-        contentsItems = fetched
     }
 
     private func openPlayer() {

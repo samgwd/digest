@@ -7,10 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		8A1F0B652C0E100100000001 /* DigestStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B602C0E100100000001 /* DigestStorage.swift */; };
-		8A1F0B662C0E100100000001 /* SharedAppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B612C0E100100000001 /* SharedAppState.swift */; };
-		8A1F0B672C0E100100000001 /* CarPlaySceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B622C0E100100000001 /* CarPlaySceneDelegate.swift */; };
-		8A1F0B682C0E100100000001 /* CarPlayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B632C0E100100000001 /* CarPlayManager.swift */; };
 		8A1F0B102C0E100100000001 /* BookDigestApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B002C0E100100000001 /* BookDigestApp.swift */; };
 		8A1F0B112C0E100100000001 /* AppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B012C0E100100000001 /* AppView.swift */; };
 		8A1F0B122C0E100100000001 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B022C0E100100000001 /* LibraryView.swift */; };
@@ -18,6 +14,7 @@
 		8A1F0B142C0E100100000001 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B042C0E100100000001 /* SettingsView.swift */; };
 		8A1F0B152C0E100100000001 /* CoverArtView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B052C0E100100000001 /* CoverArtView.swift */; };
 		8A1F0B162C0E100100000001 /* Book.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B062C0E100100000001 /* Book.swift */; };
+		8A1F0BF12C0E100100000001 /* CuratedBooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0BF02C0E100100000001 /* CuratedBooks.swift */; };
 		8A1F0B172C0E100100000001 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B072C0E100100000001 /* AppSettings.swift */; };
 		8A1F0B182C0E100100000001 /* OpenAIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B082C0E100100000001 /* OpenAIClient.swift */; };
 		8A1F0B192C0E100100000001 /* SpeechController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B092C0E100100000001 /* SpeechController.swift */; };
@@ -27,9 +24,12 @@
 		8A1F0B382C0E100100000001 /* ReadingSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B372C0E100100000001 /* ReadingSessionStore.swift */; };
 		8A1F0B402C0E100100000001 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B3F2C0E100100000001 /* SearchView.swift */; };
 		8A1F0B422C0E100100000001 /* CategoriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B412C0E100100000001 /* CategoriesView.swift */; };
-		8A1F0B502C0E100100000001 /* AddBookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B4F2C0E100100000001 /* AddBookView.swift */; };
 		8A1F0B522C0E100100000001 /* BookStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B512C0E100100000001 /* BookStore.swift */; };
 		8A1F0B542C0E100100000001 /* GoogleBooksClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B532C0E100100000001 /* GoogleBooksClient.swift */; };
+		8A1F0B652C0E100100000001 /* DigestStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B602C0E100100000001 /* DigestStorage.swift */; };
+		8A1F0B662C0E100100000001 /* SharedAppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B612C0E100100000001 /* SharedAppState.swift */; };
+		8A1F0B672C0E100100000001 /* CarPlaySceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B622C0E100100000001 /* CarPlaySceneDelegate.swift */; };
+		8A1F0B682C0E100100000001 /* CarPlayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B632C0E100100000001 /* CarPlayManager.swift */; };
 		8A1F0B712C0E100100000001 /* MyLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B702C0E100100000001 /* MyLibraryView.swift */; };
 		8A1F0B812C0E100100000001 /* DigestGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B802C0E100100000001 /* DigestGenerator.swift */; };
 /* End PBXBuildFile section */
@@ -43,6 +43,7 @@
 		8A1F0B042C0E100100000001 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		8A1F0B052C0E100100000001 /* CoverArtView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverArtView.swift; sourceTree = "<group>"; };
 		8A1F0B062C0E100100000001 /* Book.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Book.swift; sourceTree = "<group>"; };
+		8A1F0BF02C0E100100000001 /* CuratedBooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CuratedBooks.swift; sourceTree = "<group>"; };
 		8A1F0B072C0E100100000001 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		8A1F0B082C0E100100000001 /* OpenAIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIClient.swift; sourceTree = "<group>"; };
 		8A1F0B092C0E100100000001 /* SpeechController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechController.swift; sourceTree = "<group>"; };
@@ -52,7 +53,6 @@
 		8A1F0B372C0E100100000001 /* ReadingSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingSessionStore.swift; sourceTree = "<group>"; };
 		8A1F0B3F2C0E100100000001 /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
 		8A1F0B412C0E100100000001 /* CategoriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoriesView.swift; sourceTree = "<group>"; };
-		8A1F0B4F2C0E100100000001 /* AddBookView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddBookView.swift; sourceTree = "<group>"; };
 		8A1F0B512C0E100100000001 /* BookStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookStore.swift; sourceTree = "<group>"; };
 		8A1F0B532C0E100100000001 /* GoogleBooksClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleBooksClient.swift; sourceTree = "<group>"; };
 		8A1F0B602C0E100100000001 /* DigestStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigestStorage.swift; sourceTree = "<group>"; };
@@ -107,15 +107,6 @@
 			path = BookDigest;
 			sourceTree = "<group>";
 		};
-		8A1F0B692C0E100100000001 /* CarPlay */ = {
-			isa = PBXGroup;
-			children = (
-				8A1F0B622C0E100100000001 /* CarPlaySceneDelegate.swift */,
-				8A1F0B632C0E100100000001 /* CarPlayManager.swift */,
-			);
-			path = CarPlay;
-			sourceTree = "<group>";
-		};
 		8A1F0B212C0E100100000001 /* Features */ = {
 			isa = PBXGroup;
 			children = (
@@ -127,7 +118,6 @@
 				8A1F0B042C0E100100000001 /* SettingsView.swift */,
 				8A1F0B3F2C0E100100000001 /* SearchView.swift */,
 				8A1F0B412C0E100100000001 /* CategoriesView.swift */,
-				8A1F0B4F2C0E100100000001 /* AddBookView.swift */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -144,6 +134,7 @@
 			isa = PBXGroup;
 			children = (
 				8A1F0B062C0E100100000001 /* Book.swift */,
+				8A1F0BF02C0E100100000001 /* CuratedBooks.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -162,6 +153,15 @@
 				8A1F0B612C0E100100000001 /* SharedAppState.swift */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		8A1F0B692C0E100100000001 /* CarPlay */ = {
+			isa = PBXGroup;
+			children = (
+				8A1F0B622C0E100100000001 /* CarPlaySceneDelegate.swift */,
+				8A1F0B632C0E100100000001 /* CarPlayManager.swift */,
+			);
+			path = CarPlay;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -245,11 +245,11 @@
 				8A1F0B422C0E100100000001 /* CategoriesView.swift in Sources */,
 				8A1F0B152C0E100100000001 /* CoverArtView.swift in Sources */,
 				8A1F0B162C0E100100000001 /* Book.swift in Sources */,
+				8A1F0BF12C0E100100000001 /* CuratedBooks.swift in Sources */,
 				8A1F0B172C0E100100000001 /* AppSettings.swift in Sources */,
 				8A1F0B182C0E100100000001 /* OpenAIClient.swift in Sources */,
 				8A1F0B192C0E100100000001 /* SpeechController.swift in Sources */,
 				8A1F0B382C0E100100000001 /* ReadingSessionStore.swift in Sources */,
-				8A1F0B502C0E100100000001 /* AddBookView.swift in Sources */,
 				8A1F0B522C0E100100000001 /* BookStore.swift in Sources */,
 				8A1F0B542C0E100100000001 /* GoogleBooksClient.swift in Sources */,
 				8A1F0B652C0E100100000001 /* DigestStorage.swift in Sources */,
@@ -393,6 +393,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = BookDigest/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.books";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -420,6 +421,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = BookDigest/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.books";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

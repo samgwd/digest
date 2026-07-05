@@ -9,23 +9,28 @@ struct CategoryShelfView: View {
         GridItem(.flexible(), spacing: 22, alignment: .top)
     ]
 
+    // Prefer the library's copy when the reader already has the book, so
+    // digest state and category stay consistent. Catalog ids predate the
+    // shared slug format, hence the title fallback.
     private var books: [Book] {
-        bookStore.allBooks.filter { $0.category == category }
+        CuratedBooks.books(in: category).map { curated in
+            bookStore.book(withID: curated.id)
+                ?? bookStore.allBooks.first {
+                    $0.title.compare(curated.title, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
+                }
+                ?? curated
+        }
     }
 
     var body: some View {
         ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 22) {
+            LazyVStack(alignment: .leading, spacing: 22) {
                 VStack(alignment: .leading, spacing: 8) {
                     EditorialEyebrow(text: category.title)
 
                     Text(category.subtitle)
                         .font(EditorialTheme.detailFont(size: 18))
                         .foregroundStyle(EditorialTheme.mutedInk)
-
-                    Text("\(books.count) books")
-                        .font(EditorialTheme.uiFont(size: 13, weight: .semibold))
-                        .foregroundStyle(EditorialTheme.accent)
                 }
 
                 LazyVGrid(columns: columns, spacing: 22) {

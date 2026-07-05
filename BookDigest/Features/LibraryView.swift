@@ -4,7 +4,6 @@ struct LibraryView: View {
     @AppStorage(ReadingSessionStore.currentBookIDKey) private var currentReadingBookID = ""
     @EnvironmentObject private var speechController: SpeechController
     @EnvironmentObject private var bookStore: BookStore
-    @State private var showingAddBook = false
 
     private let columns = [
         GridItem(.flexible(), spacing: 22, alignment: .top),
@@ -45,9 +44,6 @@ struct LibraryView: View {
         VStack(spacing: 18) {
             HStack {
                 Spacer()
-                    .frame(width: 42)
-
-                Spacer()
 
                 Image("logo-spell-out")
                     .resizable()
@@ -55,21 +51,9 @@ struct LibraryView: View {
                     .frame(width: 150)
 
                 Spacer()
-
-                Button {
-                    showingAddBook = true
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.system(size: 16, weight: .bold))
-                }
-                .buttonStyle(EditorialIconButtonStyle())
-                .accessibilityLabel("Add Book")
             }
 
             EditorialDivider()
-        }
-        .sheet(isPresented: $showingAddBook) {
-            AddBookView()
         }
     }
 
@@ -95,9 +79,20 @@ struct LibraryView: View {
                             .tracking(1.5)
                             .foregroundStyle(EditorialTheme.accent)
 
-                        Text("\(book.deck) · \(book.readingMinutes) min")
-                            .font(EditorialTheme.uiFont(size: 12))
-                            .foregroundStyle(EditorialTheme.mutedInk)
+                        if let progress = playbackProgress(for: book) {
+                            VStack(alignment: .leading, spacing: 6) {
+                                ProgressView(value: progress.time, total: progress.duration)
+                                    .tint(EditorialTheme.forest)
+
+                                Text("\(book.deck) · \(progressText(time: progress.time, duration: progress.duration))")
+                                    .font(EditorialTheme.uiFont(size: 12))
+                                    .foregroundStyle(EditorialTheme.mutedInk)
+                            }
+                        } else {
+                            Text(book.deck)
+                                .font(EditorialTheme.uiFont(size: 12))
+                                .foregroundStyle(EditorialTheme.mutedInk)
+                        }
                     }
 
                     Spacer(minLength: 0)
@@ -130,7 +125,7 @@ struct LibraryView: View {
             HStack(alignment: .lastTextBaseline) {
                 EditorialEyebrow(text: "Top Picks")
                 Spacer()
-                Text("6 selections")
+                Text("\(topPickBooks.count) selections")
                     .font(EditorialTheme.detailFont(size: 14))
                     .foregroundStyle(EditorialTheme.mutedInk)
             }
@@ -169,19 +164,34 @@ struct LibraryView: View {
         return bookStore.allBooks.first { $0.id == currentBookID }
     }
 
+    // The two most popular books from each category (the first curated
+    // entries), preferring the reader's own copy when they already have it so
+    // digest state stays consistent.
     private var topPickBooks: [Book] {
-        let topPickIDs = [
-            "atomic-habits",
-            "deep-work",
-            "essentialism",
-            "getting-things-done",
-            "inspired",
-            "never-split-the-difference"
-        ]
-
-        return topPickIDs.compactMap { id in
-            bookStore.allBooks.first { $0.id == id }
+        BookCategory.allCases.flatMap { category in
+            CuratedBooks.books(in: category).prefix(2).map { pick in
+                bookStore.book(withID: pick.id) ?? pick
+            }
         }
+    }
+
+    private func playbackProgress(for book: Book) -> (time: TimeInterval, duration: TimeInterval)? {
+        if speechController.currentBookID == book.id, speechController.duration > 0 {
+            return (speechController.currentTime, speechController.duration)
+        }
+
+        return PlaybackPositionStore.savedPosition(for: book.id)
+    }
+
+    private func progressText(time: TimeInterval, duration: TimeInterval) -> String {
+        let percent = Int((time / duration * 100).rounded())
+        let remaining = max(duration - time, 0)
+
+        if remaining < 60 {
+            return "\(percent)% · under a minute left"
+        }
+
+        return "\(percent)% · \(Int((remaining / 60).rounded())) min left"
     }
 
     private func currentReadingStatusText(for book: Book) -> String {
@@ -242,7 +252,6 @@ struct BookTile: View {
 
 struct CategoryRow: View {
     let category: BookCategory
-    let count: Int
 
     var body: some View {
         HStack(spacing: 14) {
@@ -267,10 +276,6 @@ struct CategoryRow: View {
             }
 
             Spacer()
-
-            Text("\(count)")
-                .font(EditorialTheme.uiFont(size: 13, weight: .semibold))
-                .foregroundStyle(EditorialTheme.mutedInk)
 
             Image(systemName: "chevron.right")
                 .font(.system(size: 12, weight: .semibold))

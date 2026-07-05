@@ -64,8 +64,10 @@ private struct PersistedBook: Codable {
     let category: String
     let keywords: [String]
     let coverColors: [[Double]]
+    let coverURL: URL?
 
     init(_ book: Book) {
+        coverURL = book.coverURL
         id = book.id
         title = book.title
         shortTitle = book.shortTitle
@@ -90,7 +92,7 @@ private struct PersistedBook: Codable {
         return Book(
             id: id, title: title, shortTitle: shortTitle,
             author: author, angle: angle, category: cat,
-            keywords: keywords, coverColors: colors
+            keywords: keywords, coverColors: colors, coverURL: coverURL
         )
     }
 }

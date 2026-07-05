@@ -18,8 +18,6 @@ struct SettingsView: View {
 
                 settingsSection(title: "OpenAI") {
                     settingsField(label: "API Key", isSecure: true, text: $settings.apiKey)
-                    EditorialDivider()
-                    settingsField(label: "Model", text: $settings.model)
                 }
 
                 settingsSection(title: "ElevenLabs") {
