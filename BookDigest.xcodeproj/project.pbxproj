@@ -19,6 +19,7 @@
 		8A1F0B192C0E100100000001 /* SpeechController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B092C0E100100000001 /* SpeechController.swift */; };
 		8A1F0B1A2C0E100100000001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8A1F0B0A2C0E100100000001 /* Assets.xcassets */; };
 		8A1F0B342C0E100100000001 /* BookPlaybackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B332C0E100100000001 /* BookPlaybackView.swift */; };
+		8A1F0BA12C0E100100000001 /* MiniPlayerBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0BA02C0E100100000001 /* MiniPlayerBar.swift */; };
 		8A1F0B362C0E100100000001 /* CategoryShelfView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B352C0E100100000001 /* CategoryShelfView.swift */; };
 		8A1F0B382C0E100100000001 /* ReadingSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B372C0E100100000001 /* ReadingSessionStore.swift */; };
 		8A1F0B402C0E100100000001 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B3F2C0E100100000001 /* SearchView.swift */; };
@@ -53,6 +54,7 @@
 		8A1F0B092C0E100100000001 /* SpeechController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechController.swift; sourceTree = "<group>"; };
 		8A1F0B0A2C0E100100000001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8A1F0B332C0E100100000001 /* BookPlaybackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookPlaybackView.swift; sourceTree = "<group>"; };
+		8A1F0BA02C0E100100000001 /* MiniPlayerBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniPlayerBar.swift; sourceTree = "<group>"; };
 		8A1F0B352C0E100100000001 /* CategoryShelfView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryShelfView.swift; sourceTree = "<group>"; };
 		8A1F0B372C0E100100000001 /* ReadingSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingSessionStore.swift; sourceTree = "<group>"; };
 		8A1F0B3F2C0E100100000001 /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
@@ -136,6 +138,7 @@
 				8A1F0B702C0E100100000001 /* MyLibraryView.swift */,
 				8A1F0B032C0E100100000001 /* BookDetailView.swift */,
 				8A1F0B332C0E100100000001 /* BookPlaybackView.swift */,
+				8A1F0BA02C0E100100000001 /* MiniPlayerBar.swift */,
 				8A1F0B352C0E100100000001 /* CategoryShelfView.swift */,
 				8A1F0B042C0E100100000001 /* SettingsView.swift */,
 				8A1F0B3F2C0E100100000001 /* SearchView.swift */,
@@ -279,6 +282,7 @@
 				8A1F0B712C0E100100000001 /* MyLibraryView.swift in Sources */,
 				8A1F0B132C0E100100000001 /* BookDetailView.swift in Sources */,
 				8A1F0B342C0E100100000001 /* BookPlaybackView.swift in Sources */,
+				8A1F0BA12C0E100100000001 /* MiniPlayerBar.swift in Sources */,
 				8A1F0B362C0E100100000001 /* CategoryShelfView.swift in Sources */,
 				8A1F0B142C0E100100000001 /* SettingsView.swift in Sources */,
 				8A1F0B402C0E100100000001 /* SearchView.swift in Sources */,
