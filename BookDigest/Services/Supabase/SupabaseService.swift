@@ -59,6 +59,17 @@ final class SupabaseService {
         return rows.first
     }
 
+    func fetchReadyDigests() async throws -> [DigestRow] {
+        try await ensureSignedIn()
+        return try await client
+            .from("digests")
+            .select()
+            .eq("status", value: "ready")
+            .order("updated_at", ascending: false)
+            .execute()
+            .value
+    }
+
     func requestDigestGeneration(book: Book, openAIKey: String) async throws {
         try await ensureSignedIn()
         let key = openAIKey.trimmingCharacters(in: .whitespacesAndNewlines)
