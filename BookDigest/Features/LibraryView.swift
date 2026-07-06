@@ -196,7 +196,7 @@ struct LibraryView: View {
 
     private func currentReadingStatusText(for book: Book) -> String {
         if speechController.currentBookID == book.id {
-            if speechController.isPreparingFullTrack {
+            if speechController.loadingStage != nil {
                 return "Preparing Audio"
             }
 

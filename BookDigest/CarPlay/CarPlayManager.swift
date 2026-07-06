@@ -49,11 +49,7 @@ final class CarPlayManager {
 
         let items: [CPListItem]
 
-        if appState.settings.apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            let item = CPListItem(text: "API Key Required", detailText: "Set up your OpenAI key in the Digest app")
-            item.isEnabled = false
-            items = [item]
-        } else if playableBooks.isEmpty {
+        if playableBooks.isEmpty {
             let item = CPListItem(text: "No Digests Available", detailText: "Generate digests in the Digest app first")
             item.isEnabled = false
             items = [item]
@@ -89,14 +85,7 @@ final class CarPlayManager {
                 speech.continueSpeaking()
             }
         } else {
-            speech.speak(
-                digest.text,
-                bookID: book.id,
-                title: book.title,
-                apiKey: settings.elevenLabsAPIKey,
-                model: settings.speechModel,
-                voice: settings.speechVoice
-            )
+            speech.speak(digest.text, book: book, apiKey: settings.elevenLabsAPIKey)
         }
 
         let nowPlaying = CPNowPlayingTemplate.shared

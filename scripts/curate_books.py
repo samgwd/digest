@@ -8,9 +8,10 @@ import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
-SCRATCH = os.path.dirname(os.path.abspath(__file__))
-CACHE_PATH = os.path.join(SCRATCH, "cover_cache.json")
-SWIFT_OUT = "/Users/samgreenwood/code/personal_development/book-digest/BookDigest/Models/CuratedBooks.swift"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.dirname(SCRIPT_DIR)
+CACHE_PATH = os.path.join(SCRIPT_DIR, "cover_cache.json")
+SWIFT_OUT = os.path.join(REPO_ROOT, "BookDigest", "Models", "CuratedBooks.swift")
 
 # (category, title, author) — 50 per category
 BOOKS = [
@@ -479,7 +480,7 @@ CATEGORY_ORDER = ["habits", "focus", "priorities", "systems", "leadership", "sta
 
 
 def fetch_json(url):
-    req = urllib.request.Request(url, headers={"User-Agent": "BookDigest-curation/1.0 (sam@fuzzylabs.ai)"})
+    req = urllib.request.Request(url, headers={"User-Agent": "BookDigest-curation/1.0"})
     with urllib.request.urlopen(req, timeout=20) as resp:
         return json.load(resp)
 

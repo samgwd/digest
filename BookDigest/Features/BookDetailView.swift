@@ -19,7 +19,6 @@ struct BookDetailView: View {
     @State private var digestText = ""
     @State private var digestState: DigestState = .idle
     @State private var errorMessage: String?
-    @State private var savedAt: Date?
     @State private var isShowingPlayer = false
     @State private var isDigestExpanded = false
     @State private var synopsis: String?
@@ -60,7 +59,8 @@ struct BookDetailView: View {
             syncWithGenerator(status: digestGenerator.status(for: book.id))
             async let synopsisTask: () = loadSynopsis()
             async let contentsTask: () = loadContents()
-            _ = await (synopsisTask, contentsTask)
+            async let remoteDigestTask: () = loadRemoteDigestIfNeeded()
+            _ = await (synopsisTask, contentsTask, remoteDigestTask)
         }
         .onReceive(digestGenerator.$statuses) { statuses in
             syncWithGenerator(status: statuses[book.id] ?? .idle)
@@ -178,31 +178,38 @@ struct BookDetailView: View {
                 listeningProgressCard
             }
 
-            if shouldShowRefreshButton {
-                Button {
-                    speechController.stop()
-                    digestGenerator.generate(for: book)
-                } label: {
-                    Text("Refresh Digest")
-                }
-                .buttonStyle(EditorialSecondaryButtonStyle())
-                .disabled(settings.apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || digestState == .loading)
-            }
-
             if speechController.currentBookID == book.id {
                 nowPlayingCard
             }
 
             if settings.apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                Text("Add an OpenAI API key in Settings to generate the digest and audio.")
+                Text("Add an OpenAI API key in Settings to generate digests that don't exist yet. Digests other readers have already generated are shared and free to play.")
                     .font(EditorialTheme.detailFont(size: 14))
                     .foregroundStyle(EditorialTheme.mutedInk)
             }
 
-            if let savedAt {
-                Text("Saved \(savedAt.formatted(date: .abbreviated, time: .shortened))")
+            if settings.elevenLabsAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                Text("Add an ElevenLabs API key in Settings to also generate the audio narration. Audio other readers have already generated is shared and free to play.")
                     .font(EditorialTheme.detailFont(size: 14))
                     .foregroundStyle(EditorialTheme.mutedInk)
+            }
+
+            switch digestGenerator.audioStatus(for: book.id) {
+            case .generating:
+                HStack(spacing: 10) {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(EditorialTheme.ink)
+                    Text("Preparing audio…")
+                        .font(EditorialTheme.detailFont(size: 14))
+                        .foregroundStyle(EditorialTheme.mutedInk)
+                }
+            case .failed(let message):
+                Text("Audio couldn't be generated: \(message)")
+                    .font(EditorialTheme.detailFont(size: 14))
+                    .foregroundStyle(.red.opacity(0.86))
+            case .idle, .ready:
+                EmptyView()
             }
 
             if let speechErrorMessage = speechController.errorMessage {
@@ -344,19 +351,9 @@ struct BookDetailView: View {
     }
 
     private var primaryButtonDisabled: Bool {
-        if digestState == .loading {
-            return true
-        }
-
-        if digestText.isEmpty {
-            return settings.apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        }
-
-        return false
-    }
-
-    private var shouldShowRefreshButton: Bool {
-        !digestText.isEmpty
+        // An empty OpenAI key doesn't disable generation: the tap may find a
+        // digest another reader already shared, which needs no key.
+        digestState == .loading
     }
 
     private var digestCollapsedSummary: String {
@@ -429,8 +426,8 @@ struct BookDetailView: View {
     }
 
     private var nowPlayingStatusText: String {
-        if speechController.isPreparingFullTrack {
-            return "Preparing Full Track"
+        if speechController.loadingStage != nil {
+            return "Preparing Audio"
         }
 
         if speechController.isPaused {
@@ -471,16 +468,13 @@ struct BookDetailView: View {
                 digestState = .loading
                 startDigestProgressTimer()
             }
-        case .completed(let when):
+        case .completed:
             if let saved = DigestStorage.load(for: book.id) {
                 let sanitized = DigestTextSanitizer.sanitize(saved.text)
                 digestText = sanitized
-                savedAt = saved.savedAt
                 if sanitized != saved.text {
                     DigestStorage.save(sanitized, for: book.id, savedAt: saved.savedAt)
                 }
-            } else {
-                savedAt = when
             }
             stopDigestProgressTimer()
             digestState = .loaded
@@ -492,7 +486,7 @@ struct BookDetailView: View {
         }
     }
 
-    private static let estimatedDigestSeconds: Double = 40
+    private static let estimatedDigestSeconds: Double = 90
 
     private func startDigestProgressTimer() {
         digestProgressTimer?.invalidate()
@@ -525,11 +519,21 @@ struct BookDetailView: View {
 
         let sanitizedText = DigestTextSanitizer.sanitize(savedDigest.text)
         digestText = sanitizedText
-        savedAt = savedDigest.savedAt
         digestState = .loaded
 
         if sanitizedText != savedDigest.text {
             DigestStorage.save(sanitizedText, for: book.id, savedAt: savedDigest.savedAt)
+        }
+    }
+
+    private func loadRemoteDigestIfNeeded() async {
+        guard digestText.isEmpty else { return }
+        if await digestGenerator.fetchRemoteDigestIfAvailable(for: book) {
+            loadSavedDigest()
+        } else {
+            // The shared row may be mid-generation (e.g. this device started
+            // it before a relaunch); reattach instead of showing Generate.
+            await digestGenerator.resumeIfRemoteGenerating(for: book)
         }
     }
 

@@ -16,7 +16,6 @@
 		8A1F0B162C0E100100000001 /* Book.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B062C0E100100000001 /* Book.swift */; };
 		8A1F0BF12C0E100100000001 /* CuratedBooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0BF02C0E100100000001 /* CuratedBooks.swift */; };
 		8A1F0B172C0E100100000001 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B072C0E100100000001 /* AppSettings.swift */; };
-		8A1F0B182C0E100100000001 /* OpenAIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B082C0E100100000001 /* OpenAIClient.swift */; };
 		8A1F0B192C0E100100000001 /* SpeechController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B092C0E100100000001 /* SpeechController.swift */; };
 		8A1F0B1A2C0E100100000001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8A1F0B0A2C0E100100000001 /* Assets.xcassets */; };
 		8A1F0B342C0E100100000001 /* BookPlaybackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B332C0E100100000001 /* BookPlaybackView.swift */; };
@@ -32,6 +31,12 @@
 		8A1F0B682C0E100100000001 /* CarPlayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B632C0E100100000001 /* CarPlayManager.swift */; };
 		8A1F0B712C0E100100000001 /* MyLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B702C0E100100000001 /* MyLibraryView.swift */; };
 		8A1F0B812C0E100100000001 /* DigestGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B802C0E100100000001 /* DigestGenerator.swift */; };
+		8A1F0B9A2C0E100100000001 /* SupabaseConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B902C0E100100000001 /* SupabaseConfig.swift */; };
+		8A1F0B9B2C0E100100000001 /* RemoteModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B912C0E100100000001 /* RemoteModels.swift */; };
+		8A1F0B9C2C0E100100000001 /* SupabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B922C0E100100000001 /* SupabaseService.swift */; };
+		8A1F0B9D2C0E100100000001 /* DigestAudioStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B932C0E100100000001 /* DigestAudioStore.swift */; };
+		8A1F0B9E2C0E100100000001 /* DigestTextSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F0B942C0E100100000001 /* DigestTextSanitizer.swift */; };
+		8A1F0C032C0E100100000001 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 8A1F0C022C0E100100000001 /* Supabase */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -45,7 +50,6 @@
 		8A1F0B062C0E100100000001 /* Book.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Book.swift; sourceTree = "<group>"; };
 		8A1F0BF02C0E100100000001 /* CuratedBooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CuratedBooks.swift; sourceTree = "<group>"; };
 		8A1F0B072C0E100100000001 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
-		8A1F0B082C0E100100000001 /* OpenAIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIClient.swift; sourceTree = "<group>"; };
 		8A1F0B092C0E100100000001 /* SpeechController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechController.swift; sourceTree = "<group>"; };
 		8A1F0B0A2C0E100100000001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8A1F0B332C0E100100000001 /* BookPlaybackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookPlaybackView.swift; sourceTree = "<group>"; };
@@ -62,6 +66,13 @@
 		8A1F0B642C0E100100000001 /* BookDigest.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BookDigest.entitlements; sourceTree = "<group>"; };
 		8A1F0B702C0E100100000001 /* MyLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyLibraryView.swift; sourceTree = "<group>"; };
 		8A1F0B802C0E100100000001 /* DigestGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigestGenerator.swift; sourceTree = "<group>"; };
+		8A1F0B902C0E100100000001 /* SupabaseConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseConfig.swift; sourceTree = "<group>"; };
+		8A1F0B912C0E100100000001 /* RemoteModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteModels.swift; sourceTree = "<group>"; };
+		8A1F0B922C0E100100000001 /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
+		8A1F0B932C0E100100000001 /* DigestAudioStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigestAudioStore.swift; sourceTree = "<group>"; };
+		8A1F0B942C0E100100000001 /* DigestTextSanitizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigestTextSanitizer.swift; sourceTree = "<group>"; };
+		8A1F0D022C0E100100000001 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		8A1F0D032C0E100100000001 /* Secrets.example.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.example.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -69,6 +80,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8A1F0C032C0E100100000001 /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,9 +90,19 @@
 		8A1F0AF12C0E100100000001 = {
 			isa = PBXGroup;
 			children = (
+				8A1F0D012C0E100100000001 /* Config */,
 				8A1F0B202C0E100100000001 /* BookDigest */,
 				8A1F0AFB2C0E100100000001 /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		8A1F0D012C0E100100000001 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				8A1F0D022C0E100100000001 /* Secrets.xcconfig */,
+				8A1F0D032C0E100100000001 /* Secrets.example.xcconfig */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 		8A1F0AFB2C0E100100000001 /* Products */ = {
@@ -143,16 +165,28 @@
 			isa = PBXGroup;
 			children = (
 				8A1F0B072C0E100100000001 /* AppSettings.swift */,
-				8A1F0B082C0E100100000001 /* OpenAIClient.swift */,
 				8A1F0B092C0E100100000001 /* SpeechController.swift */,
 				8A1F0B372C0E100100000001 /* ReadingSessionStore.swift */,
 				8A1F0B512C0E100100000001 /* BookStore.swift */,
 				8A1F0B532C0E100100000001 /* GoogleBooksClient.swift */,
 				8A1F0B602C0E100100000001 /* DigestStorage.swift */,
 				8A1F0B802C0E100100000001 /* DigestGenerator.swift */,
+				8A1F0B932C0E100100000001 /* DigestAudioStore.swift */,
+				8A1F0B942C0E100100000001 /* DigestTextSanitizer.swift */,
 				8A1F0B612C0E100100000001 /* SharedAppState.swift */,
+				8A1F0B952C0E100100000001 /* Supabase */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		8A1F0B952C0E100100000001 /* Supabase */ = {
+			isa = PBXGroup;
+			children = (
+				8A1F0B902C0E100100000001 /* SupabaseConfig.swift */,
+				8A1F0B912C0E100100000001 /* RemoteModels.swift */,
+				8A1F0B922C0E100100000001 /* SupabaseService.swift */,
+			);
+			path = Supabase;
 			sourceTree = "<group>";
 		};
 		8A1F0B692C0E100100000001 /* CarPlay */ = {
@@ -180,6 +214,9 @@
 			dependencies = (
 			);
 			name = BookDigest;
+			packageProductDependencies = (
+				8A1F0C022C0E100100000001 /* Supabase */,
+			);
 			productName = BookDigest;
 			productReference = 8A1F0AFA2C0E100100000001 /* BookDigest.app */;
 			productType = "com.apple.product-type.application";
@@ -208,6 +245,9 @@
 				Base,
 			);
 			mainGroup = 8A1F0AF12C0E100100000001;
+			packageReferences = (
+				8A1F0C012C0E100100000001 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			productRefGroup = 8A1F0AFB2C0E100100000001 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -247,13 +287,17 @@
 				8A1F0B162C0E100100000001 /* Book.swift in Sources */,
 				8A1F0BF12C0E100100000001 /* CuratedBooks.swift in Sources */,
 				8A1F0B172C0E100100000001 /* AppSettings.swift in Sources */,
-				8A1F0B182C0E100100000001 /* OpenAIClient.swift in Sources */,
 				8A1F0B192C0E100100000001 /* SpeechController.swift in Sources */,
 				8A1F0B382C0E100100000001 /* ReadingSessionStore.swift in Sources */,
 				8A1F0B522C0E100100000001 /* BookStore.swift in Sources */,
 				8A1F0B542C0E100100000001 /* GoogleBooksClient.swift in Sources */,
 				8A1F0B652C0E100100000001 /* DigestStorage.swift in Sources */,
 				8A1F0B812C0E100100000001 /* DigestGenerator.swift in Sources */,
+				8A1F0B9A2C0E100100000001 /* SupabaseConfig.swift in Sources */,
+				8A1F0B9B2C0E100100000001 /* RemoteModels.swift in Sources */,
+				8A1F0B9C2C0E100100000001 /* SupabaseService.swift in Sources */,
+				8A1F0B9D2C0E100100000001 /* DigestAudioStore.swift in Sources */,
+				8A1F0B9E2C0E100100000001 /* DigestTextSanitizer.swift in Sources */,
 				8A1F0B662C0E100100000001 /* SharedAppState.swift in Sources */,
 				8A1F0B672C0E100100000001 /* CarPlaySceneDelegate.swift in Sources */,
 				8A1F0B682C0E100100000001 /* CarPlayManager.swift in Sources */,
@@ -382,6 +426,7 @@
 		};
 		8A1F0B312C0E100100000001 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8A1F0D022C0E100100000001 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -410,6 +455,7 @@
 		};
 		8A1F0B322C0E100100000001 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8A1F0D022C0E100100000001 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -458,6 +504,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		8A1F0C012C0E100100000001 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		8A1F0C022C0E100100000001 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8A1F0C012C0E100100000001 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 8A1F0AF22C0E100100000001 /* Project object */;
 }
