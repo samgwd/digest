@@ -15,9 +15,11 @@ final class DigestGenerator: ObservableObject {
     private var tasks: [String: Task<Void, Never>] = [:]
     private var backgroundTaskIDs: [String: UIBackgroundTaskIdentifier] = [:]
     private unowned let settings: AppSettings
+    private let backend: SupabaseService
 
-    init(settings: AppSettings) {
+    init(settings: AppSettings, backend: SupabaseService) {
         self.settings = settings
+        self.backend = backend
     }
 
     func status(for bookID: String) -> Status {
@@ -36,34 +38,74 @@ final class DigestGenerator: ObservableObject {
         beginBackgroundTask(for: book.id)
 
         let apiKey = settings.apiKey
-        let model = settings.model
         let bookID = book.id
+        let backend = backend
 
         tasks[book.id] = Task { [weak self] in
-            let client = OpenAIClient(apiKey: apiKey, model: model)
             do {
-                let raw = try await client.generateDigest(for: book)
+                // Someone may have generated this digest already — sharing it
+                // is the whole point, so check before asking for generation.
+                if let existing = try await backend.fetchDigest(bookID: bookID),
+                   existing.status == .ready,
+                   let text = existing.digestText, !text.isEmpty {
+                    try Task.checkCancellation()
+                    let savedAt = existing.updatedAtDate
+                    DigestStorage.save(text, for: bookID, savedAt: savedAt)
+                    self?.statuses[bookID] = .completed(savedAt: savedAt)
+                    self?.finish(for: bookID)
+                    return
+                }
+
+                try await backend.requestDigestGeneration(book: book, openAIKey: apiKey)
+                let row = try await backend.waitForDigest(book: book, openAIKey: apiKey)
                 try Task.checkCancellation()
-                let sanitized = DigestTextSanitizer.sanitize(raw)
-                let savedAt = Date()
-                DigestStorage.save(sanitized, for: bookID, savedAt: savedAt)
-                await MainActor.run {
-                    guard let self else { return }
-                    self.statuses[bookID] = .completed(savedAt: savedAt)
-                    self.finish(for: bookID)
+
+                guard let text = row.digestText, !text.isEmpty else {
+                    throw SupabaseService.ServiceError.generationFailed("The digest came back empty.")
                 }
+
+                let savedAt = row.updatedAtDate
+                DigestStorage.save(text, for: bookID, savedAt: savedAt)
+                self?.statuses[bookID] = .completed(savedAt: savedAt)
+                self?.finish(for: bookID)
             } catch is CancellationError {
-                await MainActor.run {
-                    self?.statuses[bookID] = .idle
-                    self?.finish(for: bookID)
-                }
+                self?.statuses[bookID] = .idle
+                self?.finish(for: bookID)
             } catch {
-                await MainActor.run {
-                    self?.statuses[bookID] = .failed(message: error.localizedDescription)
-                    self?.finish(for: bookID)
-                }
+                self?.statuses[bookID] = .failed(message: error.localizedDescription)
+                self?.finish(for: bookID)
             }
         }
+    }
+
+    // Passive discovery: pulls a shared digest into local storage without
+    // requiring the user to press Generate (or have any API key).
+    func fetchRemoteDigestIfAvailable(for book: Book) async -> Bool {
+        guard !isGenerating(book.id), !DigestStorage.hasDigest(for: book.id) else {
+            return false
+        }
+
+        guard let row = try? await backend.fetchDigest(bookID: book.id),
+              row.status == .ready,
+              let text = row.digestText, !text.isEmpty else {
+            return false
+        }
+
+        DigestStorage.save(text, for: book.id, savedAt: row.updatedAtDate)
+        return true
+    }
+
+    // Reattach to a generation that's already running server-side — one this
+    // device started before a relaunch, or another reader's. Re-requesting is
+    // safe: a live claim returns 'in_progress', and only a dead claim starts a
+    // fresh generation.
+    func resumeIfRemoteGenerating(for book: Book) async {
+        guard !isGenerating(book.id), !DigestStorage.hasDigest(for: book.id) else { return }
+        // Restarting after a dead claim needs a key, so don't auto-resume without one.
+        guard !settings.apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        guard let row = try? await backend.fetchDigest(bookID: book.id),
+              row.status == .generating else { return }
+        generate(for: book)
     }
 
     func acknowledgeCompletion(for bookID: String) {

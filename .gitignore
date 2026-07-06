@@ -17,3 +17,9 @@ Pods/
 
 # Secrets
 .env
+Config/Secrets.xcconfig
+
+# Supabase CLI artifacts
+supabase/.branches/
+supabase/.temp/
+supabase/functions/.env.local

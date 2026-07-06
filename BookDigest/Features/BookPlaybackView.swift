@@ -231,7 +231,7 @@ struct BookPlaybackView: View {
     }
 
     private var isPreparingTrack: Bool {
-        speechController.currentBookID == book.id && speechController.isPreparingFullTrack
+        speechController.currentBookID == book.id && speechController.loadingStage != nil
     }
 
     private var canSeek: Bool {
@@ -281,27 +281,31 @@ struct BookPlaybackView: View {
     }
 
     private var hasDownloadProgress: Bool {
-        speechController.currentBookID == book.id &&
-            speechController.totalChunkCount > 0 &&
-            speechController.downloadedChunkCount > 0
+        speechController.currentBookID == book.id && speechController.loadingStage != nil
     }
 
     private var downloadHeader: String {
-        "\(speechController.downloadedChunkCount)/\(max(speechController.totalChunkCount, 1)) sections • \(playbackTimeString(speechController.downloadedDuration)) ready"
+        guard speechController.currentBookID == book.id else {
+            return "\(playbackTimeString(displayDuration)) ready"
+        }
+
+        switch speechController.loadingStage {
+        case .requesting:
+            return "Requesting audio…"
+        case .generatingAudio:
+            return "Generating audio…"
+        case .downloading(let fraction):
+            return "Downloading \(Int(fraction * 100))%"
+        case nil:
+            return "\(playbackTimeString(speechController.duration)) ready"
+        }
     }
 
     private func togglePlayback() {
         currentReadingBookID = book.id
 
         if speechController.currentBookID != book.id {
-            speechController.speak(
-                digestText,
-                bookID: book.id,
-                title: book.title,
-                apiKey: settings.elevenLabsAPIKey,
-                model: settings.speechModel,
-                voice: settings.speechVoice
-            )
+            speechController.speak(digestText, book: book, apiKey: settings.elevenLabsAPIKey)
             return
         }
 
@@ -310,14 +314,7 @@ struct BookPlaybackView: View {
         } else if speechController.isSpeaking {
             speechController.pause()
         } else {
-            speechController.speak(
-                digestText,
-                bookID: book.id,
-                title: book.title,
-                apiKey: settings.elevenLabsAPIKey,
-                model: settings.speechModel,
-                voice: settings.speechVoice
-            )
+            speechController.speak(digestText, book: book, apiKey: settings.elevenLabsAPIKey)
         }
     }
 

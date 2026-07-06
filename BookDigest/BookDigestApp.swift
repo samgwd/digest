@@ -10,9 +10,10 @@ struct BookDigestApp: App {
 
     init() {
         let settings = AppSettings()
-        let speechController = SpeechController()
+        let supabaseService = SupabaseService()
+        let speechController = SpeechController(backend: supabaseService)
         let bookStore = BookStore()
-        let digestGenerator = DigestGenerator(settings: settings)
+        let digestGenerator = DigestGenerator(settings: settings, backend: supabaseService)
         _settings = StateObject(wrappedValue: settings)
         _speechController = StateObject(wrappedValue: speechController)
         _bookStore = StateObject(wrappedValue: bookStore)
@@ -22,6 +23,9 @@ struct BookDigestApp: App {
         shared.settings = settings
         shared.speechController = speechController
         shared.bookStore = bookStore
+        shared.supabaseService = supabaseService
+
+        Task { try? await supabaseService.ensureSignedIn() }
     }
 
     var body: some Scene {

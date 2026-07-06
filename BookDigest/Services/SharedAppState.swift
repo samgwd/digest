@@ -7,6 +7,7 @@ final class SharedAppState {
     var settings: AppSettings!
     var speechController: SpeechController!
     var bookStore: BookStore!
+    var supabaseService: SupabaseService!
 
     private init() {}
 }

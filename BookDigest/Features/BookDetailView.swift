@@ -60,7 +60,8 @@ struct BookDetailView: View {
             syncWithGenerator(status: digestGenerator.status(for: book.id))
             async let synopsisTask: () = loadSynopsis()
             async let contentsTask: () = loadContents()
-            _ = await (synopsisTask, contentsTask)
+            async let remoteDigestTask: () = loadRemoteDigestIfNeeded()
+            _ = await (synopsisTask, contentsTask, remoteDigestTask)
         }
         .onReceive(digestGenerator.$statuses) { statuses in
             syncWithGenerator(status: statuses[book.id] ?? .idle)
@@ -178,23 +179,12 @@ struct BookDetailView: View {
                 listeningProgressCard
             }
 
-            if shouldShowRefreshButton {
-                Button {
-                    speechController.stop()
-                    digestGenerator.generate(for: book)
-                } label: {
-                    Text("Refresh Digest")
-                }
-                .buttonStyle(EditorialSecondaryButtonStyle())
-                .disabled(settings.apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || digestState == .loading)
-            }
-
             if speechController.currentBookID == book.id {
                 nowPlayingCard
             }
 
             if settings.apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                Text("Add an OpenAI API key in Settings to generate the digest and audio.")
+                Text("Add an OpenAI API key in Settings to generate digests that don't exist yet. Digests other readers have already generated are shared and free to play.")
                     .font(EditorialTheme.detailFont(size: 14))
                     .foregroundStyle(EditorialTheme.mutedInk)
             }
@@ -344,19 +334,9 @@ struct BookDetailView: View {
     }
 
     private var primaryButtonDisabled: Bool {
-        if digestState == .loading {
-            return true
-        }
-
-        if digestText.isEmpty {
-            return settings.apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        }
-
-        return false
-    }
-
-    private var shouldShowRefreshButton: Bool {
-        !digestText.isEmpty
+        // An empty OpenAI key doesn't disable generation: the tap may find a
+        // digest another reader already shared, which needs no key.
+        digestState == .loading
     }
 
     private var digestCollapsedSummary: String {
@@ -429,8 +409,8 @@ struct BookDetailView: View {
     }
 
     private var nowPlayingStatusText: String {
-        if speechController.isPreparingFullTrack {
-            return "Preparing Full Track"
+        if speechController.loadingStage != nil {
+            return "Preparing Audio"
         }
 
         if speechController.isPaused {
@@ -492,7 +472,7 @@ struct BookDetailView: View {
         }
     }
 
-    private static let estimatedDigestSeconds: Double = 40
+    private static let estimatedDigestSeconds: Double = 90
 
     private func startDigestProgressTimer() {
         digestProgressTimer?.invalidate()
@@ -530,6 +510,17 @@ struct BookDetailView: View {
 
         if sanitizedText != savedDigest.text {
             DigestStorage.save(sanitizedText, for: book.id, savedAt: savedDigest.savedAt)
+        }
+    }
+
+    private func loadRemoteDigestIfNeeded() async {
+        guard digestText.isEmpty else { return }
+        if await digestGenerator.fetchRemoteDigestIfAvailable(for: book) {
+            loadSavedDigest()
+        } else {
+            // The shared row may be mid-generation (e.g. this device started
+            // it before a relaunch); reattach instead of showing Generate.
+            await digestGenerator.resumeIfRemoteGenerating(for: book)
         }
     }
 
