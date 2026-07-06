@@ -10,7 +10,17 @@ final class DigestGenerator: ObservableObject {
         case failed(message: String)
     }
 
+    // Audio is tracked separately from the text so the digest becomes readable
+    // the moment it's ready, while narration keeps generating behind it.
+    enum AudioStatus: Equatable {
+        case idle
+        case generating
+        case ready
+        case failed(message: String)
+    }
+
     @Published private(set) var statuses: [String: Status] = [:]
+    @Published private(set) var audioStatuses: [String: AudioStatus] = [:]
 
     private var tasks: [String: Task<Void, Never>] = [:]
     private var backgroundTaskIDs: [String: UIBackgroundTaskIdentifier] = [:]
@@ -26,6 +36,10 @@ final class DigestGenerator: ObservableObject {
         statuses[bookID] ?? .idle
     }
 
+    func audioStatus(for bookID: String) -> AudioStatus {
+        audioStatuses[bookID] ?? .idle
+    }
+
     func isGenerating(_ bookID: String) -> Bool {
         if case .generating = status(for: bookID) { return true }
         return false
@@ -38,6 +52,7 @@ final class DigestGenerator: ObservableObject {
         beginBackgroundTask(for: book.id)
 
         let apiKey = settings.apiKey
+        let elevenLabsKey = settings.elevenLabsAPIKey
         let bookID = book.id
         let backend = backend
 
@@ -52,21 +67,24 @@ final class DigestGenerator: ObservableObject {
                     let savedAt = existing.updatedAtDate
                     DigestStorage.save(text, for: bookID, savedAt: savedAt)
                     self?.statuses[bookID] = .completed(savedAt: savedAt)
-                    self?.finish(for: bookID)
-                    return
+                } else {
+                    try await backend.requestDigestGeneration(book: book, openAIKey: apiKey)
+                    let row = try await backend.waitForDigest(book: book, openAIKey: apiKey)
+                    try Task.checkCancellation()
+
+                    guard let text = row.digestText, !text.isEmpty else {
+                        throw SupabaseService.ServiceError.generationFailed("The digest came back empty.")
+                    }
+
+                    let savedAt = row.updatedAtDate
+                    DigestStorage.save(text, for: bookID, savedAt: savedAt)
+                    self?.statuses[bookID] = .completed(savedAt: savedAt)
                 }
 
-                try await backend.requestDigestGeneration(book: book, openAIKey: apiKey)
-                let row = try await backend.waitForDigest(book: book, openAIKey: apiKey)
-                try Task.checkCancellation()
-
-                guard let text = row.digestText, !text.isEmpty else {
-                    throw SupabaseService.ServiceError.generationFailed("The digest came back empty.")
-                }
-
-                let savedAt = row.updatedAtDate
-                DigestStorage.save(text, for: bookID, savedAt: savedAt)
-                self?.statuses[bookID] = .completed(savedAt: savedAt)
+                // The same tap produces the narration: audio continues in this
+                // task after the text is marked complete, so the digest is
+                // readable immediately and Listen doesn't start a second wait.
+                await self?.prepareAudio(for: book, elevenLabsKey: elevenLabsKey)
                 self?.finish(for: bookID)
             } catch is CancellationError {
                 self?.statuses[bookID] = .idle
@@ -75,6 +93,50 @@ final class DigestGenerator: ObservableObject {
                 self?.statuses[bookID] = .failed(message: error.localizedDescription)
                 self?.finish(for: bookID)
             }
+        }
+    }
+
+    // Generates (or fetches) the shared MP3 and caches it locally. Failures
+    // stay in audioStatuses and never mark the digest itself as failed — the
+    // text is already saved, and playback can retry audio lazily.
+    private func prepareAudio(for book: Book, elevenLabsKey: String) async {
+        let bookID = book.id
+
+        if DigestAudioStore.url(for: bookID) != nil {
+            audioStatuses[bookID] = .ready
+            return
+        }
+
+        audioStatuses[bookID] = .generating
+        do {
+            var row = try await backend.fetchDigest(bookID: bookID)
+            try Task.checkCancellation()
+
+            if row?.audioStatus != .ready || row?.audioStoragePath == nil {
+                let trimmedKey = elevenLabsKey.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmedKey.isEmpty else {
+                    // No key and no shared audio yet — leave it to the lazy
+                    // playback path, which explains the missing key.
+                    audioStatuses[bookID] = .idle
+                    return
+                }
+                try await backend.requestAudioGeneration(book: book, elevenLabsKey: trimmedKey)
+                row = try await backend.waitForAudio(bookID: bookID)
+                try Task.checkCancellation()
+            }
+
+            guard let storagePath = row?.audioStoragePath else {
+                audioStatuses[bookID] = .failed(message: "The audio isn't ready yet.")
+                return
+            }
+
+            let signedURL = try await backend.signedAudioURL(path: storagePath)
+            _ = try await DigestAudioStore.download(from: signedURL, for: bookID) { _ in }
+            audioStatuses[bookID] = .ready
+        } catch is CancellationError {
+            audioStatuses[bookID] = .idle
+        } catch {
+            audioStatuses[bookID] = .failed(message: error.localizedDescription)
         }
     }
 

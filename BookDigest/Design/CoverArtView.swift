@@ -13,12 +13,7 @@ enum CoverArtMetrics {
 struct CoverArtView: View {
     let book: Book
 
-    @StateObject private var loader: BookCoverLoader
-
-    init(book: Book) {
-        self.book = book
-        _loader = StateObject(wrappedValue: BookCoverLoader(book: book))
-    }
+    @StateObject private var loader = BookCoverLoader()
 
     var body: some View {
         GeometryReader { proxy in
@@ -42,8 +37,8 @@ struct CoverArtView: View {
             }
         }
         .clipped()
-        .task {
-            loader.loadIfNeeded()
+        .task(id: book.id) {
+            await loader.load(book: book)
         }
     }
 
@@ -97,20 +92,23 @@ struct CoverArtView: View {
 final class BookCoverLoader: ObservableObject {
     @Published var image: UIImage?
 
-    private let book: Book
+    private var loadedBookID: String?
 
-    init(book: Book) {
-        self.book = book
-    }
-
-    func loadIfNeeded() {
-        guard image == nil else {
+    func load(book: Book) async {
+        guard loadedBookID != book.id else {
             return
         }
 
-        Task { [book] in
-            image = await BookCoverService.shared.image(for: book)
+        loadedBookID = book.id
+        image = nil
+
+        let fetched = await BookCoverService.shared.image(for: book)
+
+        guard loadedBookID == book.id else {
+            return
         }
+
+        image = fetched
     }
 }
 

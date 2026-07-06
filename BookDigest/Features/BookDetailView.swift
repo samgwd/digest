@@ -19,7 +19,6 @@ struct BookDetailView: View {
     @State private var digestText = ""
     @State private var digestState: DigestState = .idle
     @State private var errorMessage: String?
-    @State private var savedAt: Date?
     @State private var isShowingPlayer = false
     @State private var isDigestExpanded = false
     @State private var synopsis: String?
@@ -189,10 +188,28 @@ struct BookDetailView: View {
                     .foregroundStyle(EditorialTheme.mutedInk)
             }
 
-            if let savedAt {
-                Text("Saved \(savedAt.formatted(date: .abbreviated, time: .shortened))")
+            if settings.elevenLabsAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                Text("Add an ElevenLabs API key in Settings to also generate the audio narration. Audio other readers have already generated is shared and free to play.")
                     .font(EditorialTheme.detailFont(size: 14))
                     .foregroundStyle(EditorialTheme.mutedInk)
+            }
+
+            switch digestGenerator.audioStatus(for: book.id) {
+            case .generating:
+                HStack(spacing: 10) {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(EditorialTheme.ink)
+                    Text("Preparing audio…")
+                        .font(EditorialTheme.detailFont(size: 14))
+                        .foregroundStyle(EditorialTheme.mutedInk)
+                }
+            case .failed(let message):
+                Text("Audio couldn't be generated: \(message)")
+                    .font(EditorialTheme.detailFont(size: 14))
+                    .foregroundStyle(.red.opacity(0.86))
+            case .idle, .ready:
+                EmptyView()
             }
 
             if let speechErrorMessage = speechController.errorMessage {
@@ -451,16 +468,13 @@ struct BookDetailView: View {
                 digestState = .loading
                 startDigestProgressTimer()
             }
-        case .completed(let when):
+        case .completed:
             if let saved = DigestStorage.load(for: book.id) {
                 let sanitized = DigestTextSanitizer.sanitize(saved.text)
                 digestText = sanitized
-                savedAt = saved.savedAt
                 if sanitized != saved.text {
                     DigestStorage.save(sanitized, for: book.id, savedAt: saved.savedAt)
                 }
-            } else {
-                savedAt = when
             }
             stopDigestProgressTimer()
             digestState = .loaded
@@ -505,7 +519,6 @@ struct BookDetailView: View {
 
         let sanitizedText = DigestTextSanitizer.sanitize(savedDigest.text)
         digestText = sanitizedText
-        savedAt = savedDigest.savedAt
         digestState = .loaded
 
         if sanitizedText != savedDigest.text {
