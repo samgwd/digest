@@ -117,6 +117,16 @@ struct MyLibraryView: View {
                         InProgressRow(entry: entry)
                     }
                     .buttonStyle(.plain)
+                    .contextMenu {
+                        Button {
+                            markFinished(entry.book)
+                        } label: {
+                            Label("Mark as Finished", systemImage: "checkmark.circle")
+                        }
+                    }
+                    .accessibilityAction(named: "Mark as Finished") {
+                        markFinished(entry.book)
+                    }
                 }
             }
         }
@@ -205,6 +215,17 @@ struct MyLibraryView: View {
         }
 
         inProgressBooks = entries
+    }
+
+    private func markFinished(_ book: Book) {
+        FinishedBooksStore.markFinished(book.id)
+        PlaybackPositionStore.clear(for: book.id)
+        if currentReadingBookID == book.id {
+            currentReadingBookID = ""
+        }
+        withAnimation {
+            reload()
+        }
     }
 }
 

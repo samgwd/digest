@@ -59,12 +59,15 @@ final class SupabaseService {
         return rows.first
     }
 
+    // "Ready" means fully playable: the shelf offers listening, so a digest
+    // whose narration failed or hasn't generated yet doesn't belong on it.
     func fetchReadyDigests() async throws -> [DigestRow] {
         try await ensureSignedIn()
         return try await client
             .from("digests")
             .select()
             .eq("status", value: "ready")
+            .eq("audio_status", value: "ready")
             .order("updated_at", ascending: false)
             .execute()
             .value
