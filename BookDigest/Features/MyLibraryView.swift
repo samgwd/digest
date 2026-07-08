@@ -3,6 +3,7 @@ import SwiftUI
 struct MyLibraryView: View {
     @AppStorage(ReadingSessionStore.currentBookIDKey) private var currentReadingBookID = ""
     @EnvironmentObject private var bookStore: BookStore
+    @EnvironmentObject private var digestGenerator: DigestGenerator
     @State private var finishedBookIDs: [String] = []
     @State private var inProgressBooks: [LibraryEntry] = []
 
@@ -16,10 +17,14 @@ struct MyLibraryView: View {
             LazyVStack(alignment: .leading, spacing: 30) {
                 header
 
-                if inProgressBooks.isEmpty && finishedBooks.isEmpty {
+                if downloadingBooks.isEmpty && visibleInProgressBooks.isEmpty && finishedBooks.isEmpty {
                     emptyState
                 } else {
-                    if !inProgressBooks.isEmpty {
+                    if !downloadingBooks.isEmpty {
+                        downloadingSection
+                    }
+
+                    if !visibleInProgressBooks.isEmpty {
                         inProgressSection
                     }
 
@@ -82,12 +87,30 @@ struct MyLibraryView: View {
         }
     }
 
-    private var inProgressSection: some View {
+    private var downloadingSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            sectionHeader(title: "In Progress", count: inProgressBooks.count)
+            sectionHeader(title: "Downloading", count: downloadingBooks.count)
 
             VStack(spacing: 12) {
-                ForEach(inProgressBooks, id: \.book.id) { entry in
+                ForEach(downloadingBooks) { book in
+                    NavigationLink {
+                        BookDetailView(book: book)
+                    } label: {
+                        DownloadingRow(book: book)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("\(book.title) by \(book.author), downloading")
+                }
+            }
+        }
+    }
+
+    private var inProgressSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            sectionHeader(title: "In Progress", count: visibleInProgressBooks.count)
+
+            VStack(spacing: 12) {
+                ForEach(visibleInProgressBooks, id: \.book.id) { entry in
                     NavigationLink {
                         BookDetailView(book: entry.book)
                     } label: {
@@ -127,10 +150,37 @@ struct MyLibraryView: View {
         }
     }
 
-    private var finishedBooks: [Book] {
-        finishedBookIDs.compactMap { id in
-            bookStore.allBooks.first { $0.id == id }
+    // Live view of in-flight generations: the digest itself, or the narration
+    // that keeps generating after the text completes. Driven by the
+    // generator's published statuses, so rows appear and disappear without a
+    // reload.
+    private var downloadingIDs: Set<String> {
+        var ids: Set<String> = []
+        for (id, status) in digestGenerator.statuses {
+            if case .generating = status { ids.insert(id) }
         }
+        for (id, status) in digestGenerator.audioStatuses where status == .generating {
+            ids.insert(id)
+        }
+        return ids
+    }
+
+    private var downloadingBooks: [Book] {
+        downloadingIDs
+            .compactMap { id in bookStore.allBooks.first { $0.id == id } }
+            .sorted { $0.title < $1.title }
+    }
+
+    private var visibleInProgressBooks: [LibraryEntry] {
+        inProgressBooks.filter { !downloadingIDs.contains($0.book.id) }
+    }
+
+    private var finishedBooks: [Book] {
+        finishedBookIDs
+            .filter { !downloadingIDs.contains($0) }
+            .compactMap { id in
+                bookStore.allBooks.first { $0.id == id }
+            }
     }
 
     private func reload() {
@@ -170,6 +220,57 @@ struct LibraryEntry {
 
     var progressPercent: Int {
         Int((progress * 100).rounded())
+    }
+}
+
+private struct DownloadingRow: View {
+    let book: Book
+
+    var body: some View {
+        HStack(spacing: 14) {
+            CoverArtView(book: book)
+                .frame(width: 64, height: CoverArtMetrics.height(forWidth: 64))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(book.title)
+                    .font(EditorialTheme.titleFont(size: 18))
+                    .foregroundStyle(EditorialTheme.ink)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+
+                Text(book.author)
+                    .font(EditorialTheme.detailFont(size: 13))
+                    .foregroundStyle(EditorialTheme.mutedInk)
+                    .lineLimit(1)
+
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(EditorialTheme.accent)
+
+                    Text("Downloading…")
+                        .font(EditorialTheme.uiFont(size: 11, weight: .semibold))
+                        .tracking(1.2)
+                        .foregroundStyle(EditorialTheme.accent)
+                }
+            }
+
+            Spacer(minLength: 0)
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(EditorialTheme.mutedInk.opacity(0.7))
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color.white.opacity(0.55))
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(EditorialTheme.separator.opacity(0.5), lineWidth: 1)
+        }
     }
 }
 

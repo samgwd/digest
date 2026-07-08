@@ -35,17 +35,29 @@ export async function synthesizeChunk(
   });
 
   if (!response.ok) {
-    let message = `ElevenLabs returned status ${response.status}.`;
+    let detailStatus = "";
+    let detailMessage = "";
     try {
       const parsed = await response.json();
+      if (typeof parsed?.detail?.status === "string") {
+        detailStatus = parsed.detail.status;
+      }
       const detail = parsed?.detail?.message ?? parsed?.detail;
       if (typeof detail === "string") {
-        message = `ElevenLabs error (status ${response.status}): ${detail}`;
+        detailMessage = detail;
       }
     } catch {
-      // keep the generic status message
+      // body wasn't JSON
     }
-    throw new Error(message);
+
+    // The thrown message ends up in audio_error and is shown to users
+    // verbatim in the app, so keep the raw detail in the logs only.
+    const rawDetail = [detailStatus, detailMessage].filter(Boolean).join(": ");
+    console.error(
+      `ElevenLabs TTS failed: status ${response.status}` +
+        (rawDetail ? ` (${rawDetail})` : ""),
+    );
+    throw new Error(friendlyTTSError(response.status, detailStatus));
   }
 
   const bytes = new Uint8Array(await response.arrayBuffer());
@@ -58,6 +70,25 @@ export async function synthesizeChunk(
   }
 
   return bytes;
+}
+
+// ElevenLabs reports key problems as 401 with a detail.status such as
+// "invalid_api_key" or "quota_exceeded", so the status code alone isn't
+// enough to tell a bad key from an empty account.
+function friendlyTTSError(status: number, detailStatus: string): string {
+  if (detailStatus === "quota_exceeded") {
+    return "The ElevenLabs account is out of credits, so the narration couldn't be generated.";
+  }
+  if (status === 401 || status === 403) {
+    return "ElevenLabs rejected the API key. Check your ElevenLabs key in Settings and try again.";
+  }
+  if (status === 429) {
+    return "ElevenLabs is busy right now. Please try again in a few minutes.";
+  }
+  if (status >= 500) {
+    return "ElevenLabs is having trouble right now. Please try again later.";
+  }
+  return "Audio generation failed. Please try again.";
 }
 
 export function concatMp3(chunks: Uint8Array[]): Uint8Array {

@@ -166,12 +166,40 @@ final class SupabaseService {
                     return row
                 }
                 if row.audioStatus == .failed {
-                    throw ServiceError.generationFailed(row.audioError ?? "Audio generation failed.")
+                    throw ServiceError.generationFailed(Self.friendlyAudioError(row.audioError))
                 }
             }
             try await Task.sleep(for: Self.pollInterval)
         }
         throw ServiceError.generationTimedOut
+    }
+
+    // Rows written before the edge function started storing user-facing
+    // messages hold raw ElevenLabs responses like
+    // "ElevenLabs error (status 401): Invalid API key" — translate those
+    // instead of showing them verbatim.
+    private static func friendlyAudioError(_ stored: String?) -> String {
+        guard let stored, !stored.isEmpty else {
+            return "Audio generation failed. Please try again."
+        }
+        guard stored.lowercased().contains("elevenlabs") else {
+            return stored
+        }
+        let lowered = stored.lowercased()
+        if lowered.contains("quota") {
+            return "The ElevenLabs account is out of credits, so the narration couldn't be generated."
+        }
+        if lowered.contains("401") || lowered.contains("403")
+            || lowered.contains("unauthorized") || lowered.contains("invalid api key") {
+            return "ElevenLabs rejected the API key. Check your ElevenLabs key in Settings and try again."
+        }
+        if lowered.contains("429") || lowered.contains("too many requests") {
+            return "ElevenLabs is busy right now. Please try again in a few minutes."
+        }
+        if lowered.contains("status 5") {
+            return "ElevenLabs is having trouble right now. Please try again later."
+        }
+        return stored
     }
 
     func signedAudioURL(path: String) async throws -> URL {
