@@ -14,7 +14,12 @@ struct BookPlaybackView: View {
     @State private var savedDuration: TimeInterval = 0
 
     private var isShowingSavedPosition: Bool {
-        speechController.currentBookID != book.id && savedDuration > 0
+        guard savedDuration > 0 else { return false }
+        if speechController.currentBookID != book.id { return true }
+        // While this book's audio is still being prepared the controller
+        // reports 0:00 / 0:00; keep showing the saved position until playback
+        // actually starts so the timeline doesn't flick back to the start.
+        return speechController.duration <= 0
     }
 
     private var displayCurrentTime: TimeInterval {
@@ -127,29 +132,18 @@ struct BookPlaybackView: View {
         VStack(alignment: .leading, spacing: 12) {
             PlaybackTimeline(
                 progress: playbackFraction,
-                downloadFraction: downloadedFraction
+                downloadFraction: downloadedFraction,
+                onScrub: canSeek ? { fraction in
+                    isEditingScrubber = true
+                    scrubPosition = fraction * displayDuration
+                } : nil,
+                onScrubEnd: canSeek ? { fraction in
+                    scrubPosition = fraction * displayDuration
+                    isEditingScrubber = false
+                    speechController.seek(to: scrubPosition)
+                } : nil
             )
             .frame(height: 18)
-
-            Slider(
-                value: Binding(
-                    get: { isEditingScrubber ? scrubPosition : displayCurrentTime },
-                    set: { scrubPosition = $0 }
-                ),
-                in: 0...max(displayDuration, 1),
-                onEditingChanged: { isEditing in
-                    if isEditing {
-                        scrubPosition = displayCurrentTime
-                        isEditingScrubber = true
-                    } else {
-                        isEditingScrubber = false
-                        speechController.seek(to: scrubPosition)
-                    }
-                }
-            )
-            .opacity(0.02)
-            .frame(height: 0)
-            .disabled(!canSeek)
 
             HStack {
                 Text(playbackTimeString(displayCurrentTime))
@@ -260,8 +254,21 @@ struct BookPlaybackView: View {
             return 0
         }
 
-        if isShowingSavedPosition { return 1 }
-        return min(max(speechController.downloadedDuration / dur, 0), 1)
+        if speechController.currentBookID == book.id {
+            switch speechController.loadingStage {
+            case .downloading(let fraction):
+                return min(max(fraction, 0), 1)
+            case .requesting, .generatingAudio:
+                return 0
+            case nil:
+                if speechController.duration > 0 {
+                    return min(max(speechController.downloadedDuration / dur, 0), 1)
+                }
+                return 0
+            }
+        }
+
+        return 1
     }
 
     private var currentSectionTitle: String {
@@ -329,6 +336,8 @@ struct BookPlaybackView: View {
 private struct PlaybackTimeline: View {
     let progress: Double
     let downloadFraction: Double
+    var onScrub: ((Double) -> Void)?
+    var onScrubEnd: ((Double) -> Void)?
 
     var body: some View {
         GeometryReader { geometry in
@@ -353,6 +362,21 @@ private struct PlaybackTimeline: View {
                     .offset(x: max(min((width * progress) - 4, width - 8), 0))
             }
             .frame(maxHeight: .infinity, alignment: .center)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        onScrub?(fraction(at: value.location.x, width: width))
+                    }
+                    .onEnded { value in
+                        onScrubEnd?(fraction(at: value.location.x, width: width))
+                    }
+            )
         }
+    }
+
+    private func fraction(at x: CGFloat, width: CGFloat) -> Double {
+        guard width > 0 else { return 0 }
+        return min(max(Double(x / width), 0), 1)
     }
 }

@@ -133,6 +133,7 @@ final class SpeechController: NSObject, ObservableObject {
         audioPlayer.currentTime = boundedTime
         currentTime = boundedTime
         updateNowPlayingInfo()
+        savePlaybackPosition()
     }
 
     func skip(by delta: TimeInterval) {
@@ -147,15 +148,12 @@ final class SpeechController: NSObject, ObservableObject {
         resetPlaybackState()
     }
 
+    // Only saves; marking a book finished happens solely in
+    // audioPlayerDidFinishPlaying, so pausing or scrubbing near the end never
+    // silently restarts the book.
     func savePlaybackPosition() {
         guard let bookID = currentBookID, duration > 0 else { return }
-        let time = currentPlaybackTime()
-        if time >= duration - 1 {
-            PlaybackPositionStore.clear(for: bookID)
-            FinishedBooksStore.markFinished(bookID)
-        } else {
-            PlaybackPositionStore.save(time: time, duration: duration, for: bookID)
-        }
+        PlaybackPositionStore.save(time: currentPlaybackTime(), duration: duration, for: bookID)
     }
 
     private func preparePlayback(for text: String, book: Book, apiKey: String) async throws {
@@ -205,13 +203,22 @@ final class SpeechController: NSObject, ObservableObject {
     private func beginLocalPlayback(url: URL, bookID: String) throws {
         loadingStage = nil
 
-        let savedPosition = PlaybackPositionStore.savedPosition(for: bookID)
-        let startTime = savedPosition?.time ?? 0
+        try replacePlayer(with: url)
+        let playerDuration = audioPlayer?.duration ?? 0
 
-        try replacePlayer(with: url, at: startTime)
-        duration = audioPlayer?.duration ?? 0
-        downloadedDuration = duration
-        currentTime = min(startTime, duration)
+        // A saved position at or past this file's end came from a different
+        // recording (regenerated audio, legacy cache) or a finished listen;
+        // starting there would instantly "finish" the book, so start over.
+        var startTime = PlaybackPositionStore.savedPosition(for: bookID)?.time ?? 0
+        if startTime >= playerDuration - 1 {
+            PlaybackPositionStore.clear(for: bookID)
+            startTime = 0
+        }
+
+        audioPlayer?.currentTime = startTime
+        duration = playerDuration
+        downloadedDuration = playerDuration
+        currentTime = startTime
         try startPlayback()
     }
 
@@ -239,11 +246,10 @@ final class SpeechController: NSObject, ObservableObject {
         updateNowPlayingInfo()
     }
 
-    private func replacePlayer(with url: URL, at time: TimeInterval) throws {
+    private func replacePlayer(with url: URL) throws {
         let player = try AVAudioPlayer(contentsOf: url)
         player.delegate = self
         player.prepareToPlay()
-        player.currentTime = min(max(time, 0), player.duration)
 
         audioPlayer?.stop()
         audioPlayer = player
@@ -260,7 +266,7 @@ final class SpeechController: NSObject, ObservableObject {
                 guard let self else { return }
                 self.syncPlaybackProgress()
                 self.positionSaveCounter += 1
-                if self.positionSaveCounter >= 25 {
+                if self.positionSaveCounter >= 5 {
                     self.positionSaveCounter = 0
                     self.savePlaybackPosition()
                 }
@@ -489,6 +495,7 @@ extension SpeechController: AVAudioPlayerDelegate {
     nonisolated func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
         Task { @MainActor in
             guard flag else {
+                savePlaybackPosition()
                 errorMessage = "Audio playback did not finish successfully."
                 resetPlaybackState(keepError: true)
                 return
@@ -504,6 +511,7 @@ extension SpeechController: AVAudioPlayerDelegate {
 
     nonisolated func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
         Task { @MainActor in
+            savePlaybackPosition()
             errorMessage = error?.localizedDescription ?? "Audio playback failed."
             resetPlaybackState(keepError: true)
         }
